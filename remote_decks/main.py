@@ -57,8 +57,6 @@ def sync_decks():
             showInfo(str(e) + deck_message)
             raise
 
-    showInfo("Synchronization complete")
-
 
 def get_or_create_deck(col: Collection, deck_name: str) -> int:
     """Get or create a deck by name and return its ID.
