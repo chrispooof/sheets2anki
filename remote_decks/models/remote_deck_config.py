@@ -5,3 +5,4 @@ class RemoteDeckConfig:
         self.note_type: str = ""
         self.note_type_fields: list[str] = []
         self.notecard_key_field: str = ""
+        self.notecard_additional_key_fields: list[str] = []

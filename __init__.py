@@ -25,6 +25,7 @@ try:
     from .remote_decks.main import add_new_deck
     from .remote_decks.main import remove_remote_deck as rDecks
     from .remote_decks.main import sync_decks as sDecks
+    from .remote_decks.main import update_deck_key_fields as updateKeys
 except Exception as e:
     showInfo(f"Error importing modules from the sheets2anki plugin:\n{e}")
     raise
@@ -47,12 +48,13 @@ def add_deck():
         ankiBridge.startEditing()
         add_new_deck()
     except Exception as e:
-        print(f"Error in add_deck: {e.with_traceback()}")  # Debug message
+        print(f"Error in add_deck: {e}")  # Debug message
+        import traceback
+
+        traceback.print_exc()
         errorMessage = str(e)
         showInfo(errorTemplate.format(errorMessage))
         if ankiBridge.getConfig().get("debug", False):
-            import traceback
-
             trace = traceback.format_exc()
             showInfo(str(trace))
     finally:
@@ -118,3 +120,8 @@ if mw is not None:
     remove_remote_deck.setShortcut(QKeySequence("Ctrl+Shift+D"))
     qconnect(remove_remote_deck.triggered, remove_remote)
     remoteDecksSubMenu.addAction(remove_remote_deck)
+
+    # Action to "Update Key Fields"
+    updateKeysAction = QAction("Update Deck Key Fields", mw)
+    qconnect(updateKeysAction.triggered, lambda: updateKeys())
+    remoteDecksSubMenu.addAction(updateKeysAction)
