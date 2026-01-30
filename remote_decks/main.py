@@ -3,6 +3,7 @@ from aqt import mw
 from aqt.qt import QInputDialog, QLineEdit
 from aqt.utils import showInfo
 
+from .key_fields_dialog import KeyFieldsDialog
 from .models.remote_deck import RemoteDeck
 from .models.remote_deck_config import RemoteDeckConfig
 
@@ -35,6 +36,9 @@ def sync_decks():
             remote_deck_config.notecard_key_field = current_remote_info[
                 "notecard_key_field"
             ]
+            remote_deck_config.notecard_additional_key_fields = current_remote_info.get(
+                "notecard_additional_key_fields", []
+            )
 
             remote_deck = get_remote_deck(
                 current_remote_info["url"],
@@ -49,6 +53,7 @@ def sync_decks():
                 deck_id,
                 remote_deck_config.note_type,
                 remote_deck_config.notecard_key_field,
+                remote_deck_config.notecard_additional_key_fields,
             )
         except Exception as e:
             deck_message = (
@@ -80,14 +85,16 @@ def create_or_update_notes(
     deck_id: int,
     note_type_name: str,
     notecard_key_field: str,
+    notecard_additional_key_fields: list[str],
 ) -> None:
     """Create or update notes in the Anki collection based on the remote deck.
     Args:
         col (Collection): The Anki collection.
-        remote_deck (RemoteDeck): The remote deck containing notecards.
+        remote_deck (RemoteDeck): The remote deck (e.g. google sheets) containing notecards.
         deck_id (int): The ID of the deck where notes will be added or updated.
         note_type_name (str): The name of the note type to use.
         notecard_key_field (str): The field used as a unique key for notecards
+        notecard_additional_key_fields (list[str]): Additional fields that need to be unique across cards
     """
 
     # Dictionaries for existing notes
@@ -95,17 +102,22 @@ def create_or_update_notes(
     existing_note_ids = {}
 
     notes = col.find_notes(f'deck:"{remote_deck.deck_name}"')
+    all_keys = [notecard_key_field] + notecard_additional_key_fields
 
     # Fetch existing notes in the deck
     for nid in notes:
         note = col.get_note(nid)
-        key = ""
+        keys = []
 
         # Use the specified key field to identify notes
         if notecard_key_field in note:
-            key = note[notecard_key_field]
+            keys.append(note[notecard_key_field])
+            if len(notecard_additional_key_fields) > 0:
+                for add_key_field in notecard_additional_key_fields:
+                    keys.append(note[add_key_field])
         else:
             continue  # Skip notes without the specified key field
+        key = "-".join(keys)
         existing_notes[key] = note
         existing_note_ids[key] = nid
 
@@ -118,7 +130,7 @@ def create_or_update_notes(
         tags = notecard.get("tags", [])
 
         try:
-            key = fields[notecard_key_field]
+            key = "-".join([fields[field] for field in all_keys])
             gs_keys.add(key)
 
             if key in existing_notes:
@@ -211,20 +223,23 @@ def add_new_deck() -> None:
 
     note_type_fields = list(filter(lambda x: x != "Cloze", note_type_fields))
 
-    notecard_key_field, ok_pressed = QInputDialog.getItem(
-        mw,
-        "Select a Notecard Key Field",
-        "Select a primary key field for the notecards:",
-        note_type_fields,
-        0,
-        False,
+    # Use the new dialog for key field selection
+    key_dialog = KeyFieldsDialog(
+        available_fields=note_type_fields,
+        primary_key=note_type_fields[0] if note_type_fields else "",
     )
 
-    if not ok_pressed or not notecard_key_field.strip():
-        notecard_key_field = note_type_fields[0]
+    if key_dialog.exec():
+        notecard_key_field, notecard_additional_key_fields = (
+            key_dialog.get_selected_fields()
+        )
+    else:
+        return  # User cancelled
 
     showInfo(
-        f"Selected note type:\n\n{note_type_name}\n\nwith default key field:\n\n{notecard_key_field}"
+        f"Selected note type:\n\n{note_type_name}\n\n"
+        f"with primary key field:\n\n{notecard_key_field}\n\n"
+        f"and additional key fields:\n\n{', '.join(notecard_additional_key_fields) if notecard_additional_key_fields else 'None'}"
     )
 
     config = mw.addonManager.getConfig(__name__)
@@ -248,6 +263,7 @@ def add_new_deck() -> None:
         "note_type": note_type_name,
         "note_type_fields": note_type_fields,
         "notecard_key_field": notecard_key_field,
+        "notecard_additional_key_fields": notecard_additional_key_fields,
     }
 
     mw.addonManager.writeConfig(__name__, config)
@@ -286,3 +302,69 @@ def remove_remote_deck() -> None:
         # Save the updated configuration
         mw.addonManager.writeConfig(__name__, config)
         showInfo(f"The deck '{selection}' has been unlinked.")
+
+
+def update_deck_key_fields() -> None:
+    """Function to update key fields for existing remote decks."""
+    config = mw.addonManager.getConfig(__name__)
+    if not config:
+        config = {"remote-decks": {}}
+
+    remote_decks = config["remote-decks"]
+    deck_names = [remote_decks[key]["deck_name"] for key in remote_decks]
+
+    if len(deck_names) == 0:
+        showInfo("There are currently no remote decks.")
+        return
+
+    # Select deck to update
+    selection, ok_pressed = QInputDialog.getItem(
+        mw,
+        "Select Deck to Update",
+        "Select a deck to update key fields:",
+        deck_names,
+        0,
+        False,
+    )
+
+    if not ok_pressed or not selection:
+        return
+
+    # Find the deck config
+    deck_config = None
+    for url, config_ in remote_decks.items():
+        if config_["deck_name"] == selection:
+            deck_config = config_
+            break
+
+    if not deck_config:
+        showInfo("Deck configuration not found.")
+        return
+
+    # Get note type fields
+    note_type_fields = deck_config["note_type_fields"]
+
+    # Show dialog with current values
+    key_dialog = KeyFieldsDialog(
+        available_fields=note_type_fields,
+        primary_key=deck_config["notecard_key_field"],
+        additional_keys=deck_config.get("notecard_additional_key_fields", []),
+    )
+
+    if key_dialog.exec():
+        notecard_key_field, notecard_additional_key_fields = (
+            key_dialog.get_selected_fields()
+        )
+
+        # Update config
+        deck_config["notecard_key_field"] = notecard_key_field
+        deck_config["notecard_additional_key_fields"] = notecard_additional_key_fields
+
+        # Save config
+        mw.addonManager.writeConfig(__name__, config)
+
+        showInfo(
+            f"Updated key fields for '{selection}':\n\n"
+            f"Primary: {notecard_key_field}\n"
+            f"Additional: {', '.join(notecard_additional_key_fields) if notecard_additional_key_fields else 'None'}"
+        )
