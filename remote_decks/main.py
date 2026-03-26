@@ -1,5 +1,3 @@
-import logging
-
 from anki.collection import Collection
 from aqt import mw
 from aqt.qt import QInputDialog, QLineEdit
@@ -14,9 +12,8 @@ try:
 except AttributeError:
     echo_mode_normal = QLineEdit.Normal
 
+from .logger import configure as configure_logging
 from .parse_remote_deck import get_remote_deck
-
-logger = logging.getLogger(__name__)
 
 
 def sync_decks() -> None:
@@ -24,9 +21,7 @@ def sync_decks() -> None:
     col = mw.col
     config = mw.addonManager.getConfig(__name__)
 
-    if config and config.get("debug", False):
-        logging.basicConfig(level=logging.DEBUG)
-        logger.setLevel(logging.DEBUG)
+    configure_logging(bool(config and config.get("debug", False)))
     if not config:
         config = {"remote-decks": {}}
 

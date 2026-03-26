@@ -1,12 +1,10 @@
 import csv
-import logging
 from typing import Any, Optional, Union
 
 import requests
 
+from .logger import logger
 from .models.remote_deck import RemoteDeck
-
-logger = logging.getLogger(__name__)
 
 
 def get_remote_deck(
