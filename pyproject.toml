@@ -1,12 +1,19 @@
 [project]
 name = "sheets2anki"
-version = "0.1.0"
+version = "1.0.0"
 requires-python = ">=3.9"
+
+[tool.ruff]
+exclude = ["remote_decks/libs/**"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 
 [dependency-groups]
 dev = [
     "aqt",
     "mypy",
     "pre-commit",
+    "pytest",
     "ruff",
 ]

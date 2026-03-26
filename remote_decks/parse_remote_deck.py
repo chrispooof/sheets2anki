@@ -1,13 +1,16 @@
 import csv
-from typing import Union
+import logging
+from typing import Any, Optional, Union
 
 import requests
 
 from .models.remote_deck import RemoteDeck
 
+logger = logging.getLogger(__name__)
+
 
 def get_remote_deck(
-    url: str, note_type_name: str, note_type_fields: list[str] = []
+    url: str, note_type_name: str, note_type_fields: Optional[list[str]] = None
 ) -> RemoteDeck:
     """Fetches and parses a remote deck from a CSV URL.
 
@@ -18,6 +21,9 @@ def get_remote_deck(
     Returns:
         RemoteDeck: The parsed remote deck.
     """
+    if note_type_fields is None:
+        note_type_fields = []
+
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -30,7 +36,7 @@ def get_remote_deck(
     return remote_deck
 
 
-def parse_csv_data(csv_data: Union[str, any]) -> list[list[str]]:
+def parse_csv_data(csv_data: Union[str, Any]) -> list[list[str]]:
     """Parses CSV data from a string.
 
     Args:
@@ -38,7 +44,7 @@ def parse_csv_data(csv_data: Union[str, any]) -> list[list[str]]:
     Returns:
         list[list[str]]: Parsed CSV data as a list of rows, each row being a list of strings.
     """
-    print("Parsing CSV data...")  # Debug message
+    logger.debug("Parsing CSV data...")
     reader = csv.reader(csv_data.splitlines())
     data = list(reader)
     return data
@@ -58,11 +64,11 @@ def build_remote_deck_from_csv(
     """
     original_headers = data[0]  # first row of data
     headers = [h.strip() for h in original_headers]
-    print("Headers:", headers)  # Debug message
+    logger.debug("Headers: %s", headers)
 
     if set(headers) != set([x.strip() for x in note_type_fields]):
-        print("Warning: CSV headers do not match note type fields.")  # Debug message
-        print("Note type fields:", note_type_fields)  # Debug message
+        logger.debug("Warning: CSV headers do not match note type fields.")
+        logger.debug("Note type fields: %s", note_type_fields)
         raise Exception(
             f"CSV headers do not match note type fields.\nheaders:{original_headers}\nrequired note type fields:{note_type_fields}"
         )
@@ -70,15 +76,15 @@ def build_remote_deck_from_csv(
     header_indices = {header: idx for idx, header in enumerate(headers)}
 
     for field_name, idx in header_indices.items():
-        print(f"Header '{field_name}' found at index {idx}")  # Debug message
+        logger.debug("Header '%s' found at index %d", field_name, idx)
 
     notecards = []
     for row_num, row in enumerate(data[1:], start=2):  # Start at line 2 (after headers)
-        print(f"Processing row {row_num}: {row}")  # Debug message
+        logger.debug("Processing row %d: %s", row_num, row)
 
         # Skip empty rows
         if not any(cell.strip() for cell in row):
-            print(f"Row {row_num} skipped because it is empty")
+            logger.debug("Row %d skipped because it is empty", row_num)
             continue
 
         fields = {}
@@ -86,26 +92,21 @@ def build_remote_deck_from_csv(
             try:
                 fields[field_name] = row[idx].strip() if idx < len(row) else ""
             except IndexError:
-                print(f"Row {row_num} skipped due to field {field_name}")
+                logger.debug("Row %d skipped due to field %s", row_num, field_name)
                 continue
 
         # Get tags if available
         tags = []
-        # tag_text = ''
-        # if tag_index is not None and tag_index < len(row):
-        #     tag_text = row[tag_index].strip()
-        # tags = tag_text.split('::') if tag_text else []
-        # tags = [tag.strip() for tag in tags if tag.strip()]
 
         # Create note card dictionary
         notecard = {"type": note_type_name, "fields": fields, "tags": tags}
         notecards.append(notecard)
-        print(f"Added notecard: {notecard['fields']}")  # Debug message
+        logger.debug("Added notecard: %s", notecard["fields"])
 
     remote_deck = RemoteDeck()
     remote_deck.deck_name = "Deck from CSV"
     remote_deck.notecards = notecards
 
-    print(f"Total questions added: {len(notecards)}")  # Debug message
+    logger.debug("Total questions added: %d", len(notecards))
 
     return remote_deck

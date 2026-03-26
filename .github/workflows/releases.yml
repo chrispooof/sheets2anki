@@ -28,7 +28,32 @@ permissions:
   contents: write
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint
+        run: uv run ruff check __init__.py remote_decks/
+
+      - name: Format check
+        run: uv run ruff format --check __init__.py remote_decks/
+
+      - name: Type check
+        run: uv run mypy remote_decks/
+
+      - name: Tests
+        run: uv run pytest tests/
+
   build_and_release:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

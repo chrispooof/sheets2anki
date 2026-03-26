@@ -1,8 +1,7 @@
+from typing import Any
+
+
 class RemoteDeck:
     def __init__(self):
         self.deck_name: str = ""
-        self.notecards = []
-        self.media = []
-
-    def get_media(self):
-        return self.media
+        self.notecards: list[dict[str, Any]] = []

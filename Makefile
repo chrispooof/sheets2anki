@@ -7,7 +7,7 @@ sources = __init__.py remote_decks/*.py
 .PHONY: install ## Install the package, dependencies, and pre-commit for local development
 install:
 	uv sync
-	uv run pre-commit install -t pre-push -t pre-commit
+	uv run pre-commit install
 
 .PHONY: format
 format: .uv ## Auto-format python source files
@@ -23,6 +23,10 @@ lint: .uv
 quality: .uv format lint
 	make format
 	make lint
+
+.PHONY: test ## Run unit tests
+test: .uv
+	uv run pytest tests/
 
 .PHONY: install-addon ## Install the addon to Anki for local development
 install-addon:
