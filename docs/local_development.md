@@ -4,7 +4,7 @@
 
 1. `python` installed.
 
-2. `pipenv` installed.
+2. `uv` installed. See https://docs.astral.sh/uv/ for installation instructions.
 
 ## Setup
 
