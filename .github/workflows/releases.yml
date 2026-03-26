@@ -41,16 +41,16 @@ jobs:
         run: uv sync
 
       - name: Lint
-        run: uv run ruff check __init__.py remote_decks/
+        run: make lint
 
       - name: Format check
-        run: uv run ruff format --check __init__.py remote_decks/
+        run: make format
 
       - name: Type check
-        run: uv run mypy remote_decks/ --exclude remote_decks/libs
+        run: make typecheck
 
       - name: Tests
-        run: uv run pytest tests/
+        run: make test
 
   build_and_release:
     needs: quality
