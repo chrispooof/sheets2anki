@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from aqt.qt import (
     QComboBox,
@@ -20,14 +20,16 @@ class KeyFieldsDialog(QDialog):
         self,
         available_fields: List[str],
         primary_key: str = "",
-        additional_keys: List[str] = None,
+        additional_keys: Optional[List[str]] = None,
         parent=None,
     ):
         super().__init__(parent)
         self.available_fields = available_fields
-        self.additional_key_widgets = []
+        self.additional_key_widgets: List[int] = []
         self.field_id_counter = 0  # Counter for unique field IDs
-        self.field_widgets = {}  # Maps field_id to (combo, layout, remove_button)
+        self.field_widgets: Dict[
+            int, tuple
+        ] = {}  # Maps field_id to (combo, layout, remove_button)
         self.primary_key = primary_key
         self.additional_keys = additional_keys or []
 

@@ -28,6 +28,10 @@ quality: .uv format lint
 test: .uv
 	uv run pytest tests/
 
+.PHONY: typecheck ## Run mypy type checking
+typecheck: .uv
+	uv run mypy remote_decks/
+
 .PHONY: install-addon ## Install the addon to Anki for local development
 install-addon:
 	rm -rf /Users/$(USER)/Library/Application\ Support/Anki2/addons21/$(ID)/ && \

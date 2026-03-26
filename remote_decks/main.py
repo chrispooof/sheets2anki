@@ -10,7 +10,7 @@ from .models.remote_deck_config import RemoteDeckConfig
 try:
     echo_mode_normal = QLineEdit.EchoMode.Normal
 except AttributeError:
-    echo_mode_normal = QLineEdit.Normal
+    echo_mode_normal = QLineEdit.Normal  # type: ignore[attr-defined]
 
 from .logger import configure as configure_logging
 from .parse_remote_deck import get_remote_deck
@@ -79,7 +79,7 @@ def get_or_create_deck(col: Collection, deck_name: str) -> int:
         deck_id = col.decks.id(deck_name)
     else:
         deck_id = deck["id"]
-    return deck_id
+    return int(deck_id)  # type: ignore[arg-type]
 
 
 def create_or_update_notes(
@@ -160,7 +160,7 @@ def create_or_update_notes(
                 for field_name, value in fields.items():
                     note[field_name] = value
                 note.tags = tags
-                col.add_note(note, deck_id)
+                col.add_note(note, deck_id)  # type: ignore[arg-type]
 
         except Exception as e:
             showInfo(
@@ -219,10 +219,11 @@ def add_new_deck() -> None:
     if not ok_pressed or not note_type_name.strip():
         note_type_name = "Basic"
 
-    note_type_fields = [
-        field["name"]
-        for field in mw.col.models.get(note_type_name_to_id[note_type_name])["flds"]
-    ]
+    note_type_model = mw.col.models.get(note_type_name_to_id[note_type_name])  # type: ignore[arg-type]
+    if note_type_model is None:
+        showInfo(f"Could not load note type '{note_type_name}'.")
+        return
+    note_type_fields = [field["name"] for field in note_type_model["flds"]]
 
     note_type_fields = list(filter(lambda x: x != "Cloze", note_type_fields))
 
