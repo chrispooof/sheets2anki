@@ -89,4 +89,4 @@ Confirm these models exist before syncing.
 
 ## Beta Status and Future Plans
 
-Sheets2Anki is in beta. Basic and Cloze types are supported now, but more features and improvements may follow as the project evolves. Keep an eye on this repository for updates.
+Sheets2Anki is in beta. Basic and custom note types are supported now, but more features and improvements may follow as the project evolves. Keep an eye on this repository for updates.
