@@ -94,7 +94,7 @@ def build_remote_deck_from_csv(
                 continue
 
         # Get tags if available
-        tags = []
+        tags: list[str] = []
 
         # Create note card dictionary
         notecard = {"type": note_type_name, "fields": fields, "tags": tags}

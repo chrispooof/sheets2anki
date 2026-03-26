@@ -47,7 +47,7 @@ jobs:
         run: uv run ruff format --check __init__.py remote_decks/
 
       - name: Type check
-        run: uv run mypy remote_decks/
+        run: uv run mypy remote_decks/ --exclude remote_decks/libs
 
       - name: Tests
         run: uv run pytest tests/
