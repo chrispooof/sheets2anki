@@ -1,26 +1,26 @@
 sources = __init__.py remote_decks/*.py
 
-.PHONY: .pipenv ## Check that pipenv is installed
-.pipenv:
-	@pipenv --version || echo 'Please install pipenv: https://pipenv.pypa.io/en/latest/'
+.PHONY: .uv ## Check that uv is installed
+.uv:
+	@uv --version || echo 'Please install uv: https://docs.astral.sh/uv/'
 
 .PHONY: install ## Install the package, dependencies, and pre-commit for local development
 install:
-	pipenv install --dev
-	pipenv run pre-commit install -t pre-push -t pre-commit
+	uv sync
+	uv run pre-commit install -t pre-push -t pre-commit
 
 .PHONY: format
-format: .pipenv ## Auto-format python source files
-	pipenv run ruff check --fix $(sources)
-	pipenv run ruff format $(sources)
+format: .uv ## Auto-format python source files
+	uv run ruff check --fix $(sources)
+	uv run ruff format $(sources)
 
 .PHONY: lint ## Lint python source files
-lint: .pipenv
-	pipenv run ruff check $(sources)
-	pipenv run ruff format --check $(sources)
+lint: .uv
+	uv run ruff check $(sources)
+	uv run ruff format --check $(sources)
 
 .PHONY: quality ## Run all quality checks
-quality: .pipenv format lint
+quality: .uv format lint
 	make format
 	make lint
 
