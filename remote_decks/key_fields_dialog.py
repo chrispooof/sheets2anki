@@ -1,3 +1,5 @@
+"""Qt dialog for selecting primary and additional key fields when configuring a remote deck."""
+
 from typing import Dict, List, Optional, Tuple
 
 from aqt.qt import (

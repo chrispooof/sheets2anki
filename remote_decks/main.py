@@ -1,3 +1,9 @@
+"""Entry point for remote deck operations.
+
+Provides functions to sync, add, remove, and update remote Anki decks
+sourced from published Google Sheets CSV URLs.
+"""
+
 from anki.collection import Collection
 from aqt import mw
 from aqt.qt import QInputDialog, QLineEdit

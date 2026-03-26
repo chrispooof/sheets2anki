@@ -1,3 +1,5 @@
+"""Utilities for fetching and parsing remote CSV decks into RemoteDeck objects."""
+
 import csv
 from typing import Any, Optional, Union
 
