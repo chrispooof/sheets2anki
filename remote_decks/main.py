@@ -1,3 +1,5 @@
+import logging
+
 from anki.collection import Collection
 from aqt import mw
 from aqt.qt import QInputDialog, QLineEdit
@@ -14,11 +16,17 @@ except AttributeError:
 
 from .parse_remote_deck import get_remote_deck
 
+logger = logging.getLogger(__name__)
 
-def sync_decks():
+
+def sync_decks() -> None:
     """Function to sync remote decks."""
     col = mw.col
     config = mw.addonManager.getConfig(__name__)
+
+    if config and config.get("debug", False):
+        logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
     if not config:
         config = {"remote-decks": {}}
 

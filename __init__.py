@@ -35,34 +35,35 @@ Hello! It seems an error occurred during execution.
 
 The error was: {}.
 
-If you want me to fix it, please report it here: https://github.com/sebastianpaez/sheets2anki
+If you want me to fix it, please report it here: https://github.com/chrispooof/sheets2anki
 
 Make sure to provide as much information as possible, especially the file that caused the error.
 """
 
 
-def add_deck():
+def add_deck() -> None:
     """Function to add a new remote deck."""
+    ankiBridge = None
     try:
         ankiBridge = getConnector()
         ankiBridge.startEditing()
         add_new_deck()
     except Exception as e:
-        print(f"Error in add_deck: {e}")  # Debug message
         import traceback
 
-        traceback.print_exc()
         errorMessage = str(e)
         showInfo(errorTemplate.format(errorMessage))
-        if ankiBridge.getConfig().get("debug", False):
+        if ankiBridge is not None and ankiBridge.getConfig().get("debug", False):
             trace = traceback.format_exc()
             showInfo(str(trace))
     finally:
-        ankiBridge.stopEditing()
+        if ankiBridge is not None:
+            ankiBridge.stopEditing()
 
 
-def sync_decks():
+def sync_decks() -> None:
     """Function to sync remote decks."""
+    ankiBridge = None
     try:
         ankiBridge = getConnector()
         ankiBridge.startEditing()
@@ -70,18 +71,20 @@ def sync_decks():
     except Exception as e:
         errorMessage = str(e)
         showInfo(errorTemplate.format(errorMessage))
-        if ankiBridge.getConfig().get("debug", False):
+        if ankiBridge is not None and ankiBridge.getConfig().get("debug", False):
             import traceback
 
             trace = traceback.format_exc()
             showInfo(str(trace))
     finally:
         showInfo("Synchronization complete")
-        ankiBridge.stopEditing()
+        if ankiBridge is not None:
+            ankiBridge.stopEditing()
 
 
-def remove_remote():
+def remove_remote() -> None:
     """Function to remove a remote deck."""
+    ankiBridge = None
     try:
         ankiBridge = getConnector()
         ankiBridge.startEditing()
@@ -89,13 +92,14 @@ def remove_remote():
     except Exception as e:
         errorMessage = str(e)
         showInfo(errorTemplate.format(errorMessage))
-        if ankiBridge.getConfig().get("debug", False):
+        if ankiBridge is not None and ankiBridge.getConfig().get("debug", False):
             import traceback
 
             trace = traceback.format_exc()
             showInfo(str(trace))
     finally:
-        ankiBridge.stopEditing()
+        if ankiBridge is not None:
+            ankiBridge.stopEditing()
 
 
 # Confirm that mw is not None before adding new action to the menu
