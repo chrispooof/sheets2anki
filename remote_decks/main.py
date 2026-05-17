@@ -49,6 +49,16 @@ def sync_decks() -> None:
                 "notecard_additional_key_fields", []
             )
 
+            # Refresh note_type_fields from the live Anki note type so a stale
+            # meta.json doesn't trigger a false header-mismatch error.
+            note_type_model = col.models.by_name(remote_deck_config.note_type)
+            if note_type_model is not None:
+                live_fields = [field["name"] for field in note_type_model["flds"]]
+                if live_fields != current_remote_info["note_type_fields"]:
+                    remote_deck_config.note_type_fields = live_fields
+                    current_remote_info["note_type_fields"] = live_fields
+                    mw.addonManager.writeConfig(__name__, config)
+
             remote_deck = get_remote_deck(
                 current_remote_info["url"],
                 remote_deck_config.note_type,
